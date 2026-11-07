@@ -1,0 +1,69 @@
+{
+  "case_id": "B",
+  "case_name": "khe_hep",
+  "title": "Ca B - Khe hẹp (Hai bão kẹp sát tạo cổng khe tại x=40)",
+  "description": "Hai bão kẹp sát tại x=40 tạo khoảng trống từ y=47 tới y=53. Bão thứ ba tại (73, 50).",
+  "start": [0.0, 50.0],
+  "goal": [100.0, 50.0],
+  "base_station": [0.0, 50.0],
+  "battery_max": 220.0,
+  "bounds": {
+    "x_min": 0.0,
+    "x_max": 100.0,
+    "y_min": 0.0,
+    "y_max": 100.0,
+    "pin_min": 0.0,
+    "pin_max": 25.0
+  },
+  "camps": [
+    {"id": 1, "name": "C1", "pos": [12.0, 70.0], "weight": 12.0},
+    {"id": 2, "name": "C2", "pos": [20.0, 25.0], "weight": 18.0},
+    {"id": 3, "name": "C3", "pos": [38.0, 31.0], "weight": 15.0},
+    {"id": 4, "name": "C4", "pos": [43.0, 85.0], "weight": 20.0},
+    {"id": 5, "name": "C5", "pos": [61.0, 43.0], "weight": 16.0},
+    {"id": 6, "name": "C6", "pos": [65.0, 83.0], "weight": 12.0},
+    {"id": 7, "name": "C7", "pos": [84.0, 63.0], "weight": 18.0},
+    {"id": 8, "name": "C8", "pos": [90.0, 22.0], "weight": 14.0}
+  ],
+  "storms": [
+    {
+      "id": 1,
+      "name": "Bão Nam (Khe)",
+      "center": [40.0, 29.0],
+      "radius": 16.0,
+      "safety_margin": 2.0,
+      "effective_radius": 18.0
+    },
+    {
+      "id": 2,
+      "name": "Bão Bắc (Khe)",
+      "center": [40.0, 71.0],
+      "radius": 16.0,
+      "safety_margin": 2.0,
+      "effective_radius": 18.0
+    },
+    {
+      "id": 3,
+      "name": "Bão Đông",
+      "center": [73.0, 50.0],
+      "radius": 11.0,
+      "safety_margin": 2.0,
+      "effective_radius": 13.0
+    }
+  ],
+  "narrow_gate": {
+    "gate_id": "GATE_B",
+    "x_gate": 40.0,
+    "y_min": 47.0,
+    "y_max": 53.0,
+    "center": [40.0, 50.0],
+    "width": 6.0,
+    "description": "Cổng khe hẹp tại x=40 từ y=47 tới y=53 giữa hai bão (40,29) và (40,71)"
+  },
+  "reference_values": {
+    "L_ref": 100.0,
+    "theta_ref": 3.1416,
+    "A_ref": 60.0,
+    "U_max": 1.0
+  }
+}

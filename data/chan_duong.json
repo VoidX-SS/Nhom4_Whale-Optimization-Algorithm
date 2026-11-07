@@ -1,0 +1,61 @@
+{
+  "case_id": "C",
+  "case_name": "chan_duong",
+  "title": "Ca C - Chắn đường (Ba bão án ngữ trực diện trục ngang S-T)",
+  "description": "Ba bão án ngữ tại (28, 50), (50, 50), (72, 50) cùng bán kính gốc 14 (sau biên an toàn là 16), buộc UAV phải bay vòng cung.",
+  "start": [0.0, 50.0],
+  "goal": [100.0, 50.0],
+  "base_station": [0.0, 50.0],
+  "battery_max": 220.0,
+  "bounds": {
+    "x_min": 0.0,
+    "x_max": 100.0,
+    "y_min": 0.0,
+    "y_max": 100.0,
+    "pin_min": 0.0,
+    "pin_max": 25.0
+  },
+  "camps": [
+    {"id": 1, "name": "C1", "pos": [12.0, 70.0], "weight": 12.0},
+    {"id": 2, "name": "C2", "pos": [20.0, 25.0], "weight": 18.0},
+    {"id": 3, "name": "C3", "pos": [38.0, 31.0], "weight": 15.0},
+    {"id": 4, "name": "C4", "pos": [43.0, 85.0], "weight": 20.0},
+    {"id": 5, "name": "C5", "pos": [61.0, 43.0], "weight": 16.0},
+    {"id": 6, "name": "C6", "pos": [65.0, 83.0], "weight": 12.0},
+    {"id": 7, "name": "C7", "pos": [84.0, 63.0], "weight": 18.0},
+    {"id": 8, "name": "C8", "pos": [90.0, 22.0], "weight": 14.0}
+  ],
+  "storms": [
+    {
+      "id": 1,
+      "name": "Bão Tây",
+      "center": [28.0, 50.0],
+      "radius": 14.0,
+      "safety_margin": 2.0,
+      "effective_radius": 16.0
+    },
+    {
+      "id": 2,
+      "name": "Bão Trung tâm",
+      "center": [50.0, 50.0],
+      "radius": 14.0,
+      "safety_margin": 2.0,
+      "effective_radius": 16.0
+    },
+    {
+      "id": 3,
+      "name": "Bão Đông",
+      "center": [72.0, 50.0],
+      "radius": 14.0,
+      "safety_margin": 2.0,
+      "effective_radius": 16.0
+    }
+  ],
+  "narrow_gate": null,
+  "reference_values": {
+    "L_ref": 100.0,
+    "theta_ref": 3.1416,
+    "A_ref": 60.0,
+    "U_max": 1.0
+  }
+}
