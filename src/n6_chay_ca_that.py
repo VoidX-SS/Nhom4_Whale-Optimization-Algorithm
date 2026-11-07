@@ -1,11 +1,5 @@
 """
 n6_chay_ca_that.py - chạy hàm woa chung của N6 trên ca thật của nhóm.
-
-Chạy từ THƯ MỤC GỐC của repo (không phải trong src):
-    python -m src.n6_chay_ca_that khe_hep
-
-Cần có sẵn trong repo: src/n3_phuc_khang_danh_gia.py (N3) và src/n4_hoang_yen_du_lieu.py (N4).
-Bản dự phòng default_init, default_bounds, default_update vẫn được dùng cho đến khi có hàm của N5.
 """
 import sys
 
