@@ -1,1 +1,0 @@
-# Nhom4_Whale-Optimization-Algorithm
