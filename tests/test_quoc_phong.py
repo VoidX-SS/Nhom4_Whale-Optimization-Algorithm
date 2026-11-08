@@ -15,13 +15,11 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..",
 from src.n2_quoc_phong_nang_luong import (
     calculate_flight_energy,
     calculate_lamp_energy,
-    calculate_herfindahl_energy_index,
     energy_metrics,
     signal_from_single_beacon,
     saturation_utility,
     camp_detailed_breakdown,
     signal_metrics,
-    analyze_energy_and_camps,
     DEFAULT_BATTERY_BUDGET,
     DEFAULT_FLIGHT_COST_RATE,
     DEFAULT_SIGNAL_SCALE_DIST,
@@ -163,20 +161,17 @@ class TestQuocPhongEnergyAndUtility(unittest.TestCase):
         self.assertEqual(s_res["weakest_camp_name"], "C8")
         self.assertEqual(s_res["minimum_service"], c8_info["utility"])
 
-    def test_06_herfindahl_index_and_concentration(self):
-        """Kiểm tra chỉ số H_E đo mức độ dồn pin đèn (Trang 15 tài liệu)."""
-        # Chia đều cho 4 đèn -> H_E = 1/4 = 0.25
-        beacons_equal = [{"x": 10, "y": 10, "energy": 10.0, "active": True} for _ in range(4)]
-        h_equal = calculate_herfindahl_energy_index(beacons_equal)
-        self.assertAlmostEqual(h_equal, 0.25, places=5)
-
-        # Dồn hết vào 1 đèn -> H_E = 1.0
-        beacons_one = [
-            {"x": 10, "y": 10, "energy": 40.0, "active": True},
-            {"x": 20, "y": 20, "energy": 0.0,  "active": True},
+    def test_06_active_beacons_count(self):
+        """Kiểm tra đếm số đèn phát đáng kể (> 0.001)."""
+        beacons = [
+            {"x": 10, "y": 10, "energy": 15.0, "active": True},
+            {"x": 20, "y": 20, "energy": 0.0005, "active": True}, # Quá nhỏ
+            {"x": 30, "y": 30, "energy": 10.0, "active": False}, # Tắt
+            {"x": 40, "y": 40, "energy": 20.0, "active": True},
         ]
-        h_one = calculate_herfindahl_energy_index(beacons_one)
-        self.assertAlmostEqual(h_one, 1.0, places=5)
+        res = energy_metrics(100.0, beacons)
+        # Chỉ có beacon 0 và beacon 3 là active và > 0.001
+        self.assertEqual(res["active_beacons_count"], 2)
 
     def test_07_full_compatibility_with_n3_khang_interface(self):
         """

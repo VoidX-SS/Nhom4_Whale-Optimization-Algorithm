@@ -2,10 +2,15 @@
 src/n2_quoc_phong_nang_luong.py - Module N2: Quốc Phong
 Dự án: Nhóm 4 - Whale Optimization Algorithm (WOA) - Bài toán Đom Đóm
 
+Trách nhiệm phân công:
+1. Tính túi pin chung (Pin bay: 0.45 * L, Pin đèn thực dùng: sum(e_k), Tổng pin <= 220).
+2. Tính phần vượt pin chuẩn hóa over = max(0, total - 220) / 220 (không tự gọt pin).
+3. Tính tín hiệu suy giảm theo khoảng cách: I_km = e_k / (1 + d_km^2 / 18^2).
+4. Tính độ hữu dụng bão hòa u_m = 1 - exp(-0.1 * I_m), hữu dụng có trọng số U và u_min.
+5. Cung cấp báo cáo đọc mức 8 trại cứu trợ và trại yếu nhất.
 """
 
 import math
-import sys
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 # Các hằng số mặc định theo đúng đề bài chốt
@@ -37,17 +42,14 @@ def extract_beacon_energy(beacon: Any) -> float:
     Nếu đèn không kích hoạt (active == False), năng lượng thực tế là 0.0.
     """
     if isinstance(beacon, dict):
-        # Nếu có cờ active rõ ràng và active == False -> năng lượng = 0.0
         if "active" in beacon and not beacon["active"]:
             return 0.0
-        # Hỗ trợ cả key "energy", "pin", "power"
         return float(beacon.get("energy", beacon.get("pin", beacon.get("power", 0.0))))
     if hasattr(beacon, "energy"):
         return float(getattr(beacon, "energy"))
     if hasattr(beacon, "light_powers"):
         return float(getattr(beacon, "light_powers"))
     if isinstance(beacon, (list, tuple)) and len(beacon) >= 3:
-        # beacon dạng [x, y, pin]
         return float(beacon[2])
     return 0.0
 
@@ -66,26 +68,6 @@ def calculate_lamp_energy(beacons: Sequence[Any]) -> float:
     return float(total_lamps)
 
 
-def calculate_herfindahl_energy_index(beacons: Sequence[Any]) -> float:
-    """
-    Chỉ số tập trung năng lượng đèn (Herfindahl-Hirschman Index - H_E) theo Trang 15 tài liệu:
-    H_E = sum( (e_k / E_den)^2 ) khi E_den > 0.
-    - H_E = 1/m nếu chia đều cho m đèn.
-    - H_E = 1.0 nếu dồn hết pin vào 1 đèn duy nhất.
-    - H_E = 0.0 nếu không bật đèn nào.
-    """
-    e_lamps = calculate_lamp_energy(beacons)
-    if e_lamps <= 1e-12:
-        return 0.0
-    h_sum = 0.0
-    for b in beacons:
-        e = extract_beacon_energy(b)
-        if e > 0.0:
-            ratio = e / e_lamps
-            h_sum += ratio * ratio
-    return float(h_sum)
-
-
 def energy_metrics(
     length: float,
     beacons: Sequence[Any],
@@ -94,7 +76,13 @@ def energy_metrics(
     """
     BƯỚC 1 & 2: Tính toán toàn diện năng lượng bay, năng lượng đèn và mức vượt pin.
     
+    Quy tắc cốt lõi:
+    - Túi pin cố định: 220 đơn vị.
+    - over = max(0, total - 220) / 220 (chuẩn hóa tỷ lệ vượt, KHÔNG tự ý cắt bớt pin).
+    - Phạt tương ứng của N3 là 30 * over^2.
     
+    Đầu ra chuẩn bàn giao cho Phúc Khang (N3):
+      flight, lamps, total, over, excess, budget, energy_ok.
     """
     budget = DEFAULT_BATTERY_BUDGET
     flight_cost = DEFAULT_FLIGHT_COST_RATE
@@ -109,11 +97,7 @@ def energy_metrics(
 
     excess = max(0.0, e_total - budget)
     over_pin = excess / budget if budget > 0.0 else 0.0
-
-    # Sai số dung sai số học 1e-7 theo đúng quy ước Khang (N3)
     energy_ok = bool(e_total <= budget + 1e-7)
-
-    # Đếm số đèn phát đáng kể (e_k > 0.001) theo trang 15 tài liệu
     active_beacons_count = sum(1 for b in beacons if extract_beacon_energy(b) > 0.001)
 
     return {
@@ -125,7 +109,6 @@ def energy_metrics(
         "budget": budget,
         "energy_ok": energy_ok,
         "active_beacons_count": active_beacons_count,
-        "herfindahl_index": round(calculate_herfindahl_energy_index(beacons), 6),
     }
 
 
@@ -206,8 +189,6 @@ def camp_detailed_breakdown(
 ) -> List[Dict[str, Any]]:
     """
     BƯỚC 5: Đọc chi tiết mức độ phục vụ từng trại trong số 8 trại cứu trợ.
-    
-    
     """
     camps_data = []
     signal_range = DEFAULT_SIGNAL_SCALE_DIST
@@ -218,7 +199,6 @@ def camp_detailed_breakdown(
         signal_range = float(problem.get("signal_scale_dist", problem.get("signal_range", DEFAULT_SIGNAL_SCALE_DIST)))
         alpha = float(problem.get("utility_decay", problem.get("alpha", DEFAULT_UTILITY_ALPHA)))
 
-    # Nếu không truyền danh sách trại, lấy 8 trại chuẩn của Ca A/B/C theo đề bài
     if not camps_data:
         camps_data = [
             {"id": 1, "name": "C1", "pos": [12.0, 70.0], "weight": 12.0},
@@ -276,7 +256,14 @@ def signal_metrics(
     """
     BƯỚC 3 & 4: Tính toán toàn diện tín hiệu và độ hữu dụng bão hòa cho 8 trại.
     
-   
+    Quy tắc cốt lõi:
+    - Tín hiệu: I_m = sum_k ( e_k / (1 + d^2 / 18^2) ).
+    - Hữu dụng cá nhân: u_m = 1 - exp(-0.1 * I_m).
+    - Hữu dụng toàn hệ thống có trọng số: U = sum(w_m * u_m) / sum(w_m).
+    - Mức phục vụ tối thiểu: u_min = min(u_m).
+    
+    Đầu ra chuẩn bàn giao cho Phúc Khang (N3):
+      utility_sat, minimum_service, levels, satisfaction, camp_breakdown.
     """
     breakdown = camp_detailed_breakdown(beacons, problem=problem)
 
@@ -287,10 +274,8 @@ def signal_metrics(
     weighted_u_sum = sum(w * u for w, u in zip(weights, satisfaction))
     total_weight = sum(weights) if weights else 1.0
     u_system = weighted_u_sum / total_weight if total_weight > 0.0 else 0.0
-
     u_min = min(satisfaction) if satisfaction else 0.0
 
-    # Xác định trại đói tín hiệu nhất
     weakest_camp = None
     if breakdown:
         weakest_camp = min(breakdown, key=lambda c: c["utility"])
@@ -305,43 +290,3 @@ def signal_metrics(
         "weakest_camp_utility": round(u_min, 6),
         "camp_breakdown": breakdown
     }
-
-
-# ======================================================================
-# PHẦN 3: TỔNG HỢP VÀ PHÂN TÍCH CA GỐC / HỖ TRỢ NGÁCH K (BƯỚC 5 & 6)
-# ======================================================================
-
-def analyze_energy_and_camps(
-    length: float,
-    beacons: Sequence[Any],
-    problem: Optional[Dict[str, Any]] = None
-) -> Dict[str, Any]:
-    """
-    Hàm tích hợp đầy đủ cả hai trụ cột Năng lượng và Tín hiệu của Quốc Phong (N2).
-    Hỗ trợ đọc sâu các trường hợp Ca A, B, C và phân tích so sánh K = 6, 8, 10.
-    """
-    e_dict = energy_metrics(length, beacons, problem)
-    s_dict = signal_metrics(beacons, problem)
-
-    # Đánh giá cán cân phân bổ năng lượng
-    flight_ratio = e_dict["flight"] / e_dict["total"] if e_dict["total"] > 0 else 0.0
-    lamp_ratio = e_dict["lamps"] / e_dict["total"] if e_dict["total"] > 0 else 0.0
-
-    analysis = {
-        "energy": e_dict,
-        "signal": s_dict,
-        "flight_ratio_percent": round(flight_ratio * 100.0, 2),
-        "lamp_ratio_percent": round(lamp_ratio * 100.0, 2),
-        "is_valid_battery": e_dict["energy_ok"],
-        "weakest_camp": s_dict["weakest_camp_name"],
-        "min_service": s_dict["minimum_service"],
-    }
-    return analysis
-
-
-
-
-
-
-if __name__ == "__main__":
-    run_self_verification()
