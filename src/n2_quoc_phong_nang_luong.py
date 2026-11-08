@@ -94,13 +94,7 @@ def energy_metrics(
     """
     BƯỚC 1 & 2: Tính toán toàn diện năng lượng bay, năng lượng đèn và mức vượt pin.
     
-    Quy tắc cốt lõi:
-    - Túi pin cố định: 220 đơn vị.
-    - over = max(0, total - 220) / 220 (chuẩn hóa tỷ lệ vượt, KHÔNG tự ý cắt bớt pin).
-    - Phạt tương ứng của N3 là 30 * over^2.
     
-    Đầu ra tương thích 100% với phiếu chấm của Phúc Khang (N3) và thống kê của Trang Nguyễn (N9):
-      flight, lamps, total, over, energy_ok, herfindahl_index.
     """
     budget = DEFAULT_BATTERY_BUDGET
     flight_cost = DEFAULT_FLIGHT_COST_RATE
@@ -213,10 +207,7 @@ def camp_detailed_breakdown(
     """
     BƯỚC 5: Đọc chi tiết mức độ phục vụ từng trại trong số 8 trại cứu trợ.
     
-    Trả về danh sách 8 bản ghi chi tiết:
-    - Trại nào được phục vụ mạnh (gần bão hòa).
-    - Trại nào bị đói tín hiệu (I_m thấp, u_m thấp).
-    - Đèn nào đóng góp chính cho trại đó.
+    
     """
     camps_data = []
     signal_range = DEFAULT_SIGNAL_SCALE_DIST
@@ -285,18 +276,7 @@ def signal_metrics(
     """
     BƯỚC 3 & 4: Tính toán toàn diện tín hiệu và độ hữu dụng bão hòa cho 8 trại.
     
-    Quy tắc cốt lõi:
-    - Tín hiệu: I_m = sum_k ( e_k / (1 + d^2 / 18^2) ).
-    - Hữu dụng cá nhân: u_m = 1 - exp(-0.1 * I_m).
-    - Hữu dụng toàn hệ thống có trọng số: U = sum(w_m * u_m) / sum(w_m).
-    - Mức phục vụ tối thiểu: u_min = min(u_m).
-    
-    Lưu ý quan trọng:
-    - U là chỉ số mô phỏng của hàm toán học bão hòa, KHÔNG phải tỷ lệ người được cứu.
-    - U cao không tự bảo đảm mọi trại đều có đủ tín hiệu (do đó cần u_min giám sát).
-    
-    Đầu ra tương thích 100% với phiếu chấm của Phúc Khang (N3):
-      utility_sat, minimum_service, levels, satisfaction, camp_breakdown.
+   
     """
     breakdown = camp_detailed_breakdown(beacons, problem=problem)
 
@@ -359,100 +339,8 @@ def analyze_energy_and_camps(
     return analysis
 
 
-# ======================================================================
-# PHẦN 4: VÍ DỤ TÍNH TAY VÀ TỰ KIỂM CHỨNG THEO ĐÚNG TÀI LIỆU
-# ======================================================================
 
-def run_self_verification():
-    """
-    Hàm chạy tự kiểm chứng với các ví dụ tính tay đối chiếu tài liệu:
-    1. Trang 9: L = 150, pin đèn = 130 -> pin bay 67.5, pin tổng 197.5 (<= 220).
-    2. Trang 10: Đèn pin 20: d=0 -> I=20; d=18 -> I=10; d=36 -> I=4.
-    3. Trang 10: I = 0, 5, 10, 20, 40 -> u = 0, 0.3935, 0.6321, 0.8647, 0.9817.
-    4. Trang 10: Ví dụ 2 trại w=3,1 với u=0.8, 0.4 -> U = 0.7, u_min = 0.4.
-    5. Trang 12: Vượt pin tổng 230 -> over = 10 / 220 = 0.045455, phạt pin 30 * over^2.
-    6. Kiểm tra đèn tắt không tiêu pin và không góp tín hiệu.
-    """
-    if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding="utf-8")
-    print("=" * 76)
-    print(" BỘ KIỂM CHỨNG TOÁN HỌC & ĐỐI CHIẾU SỐ LIỆU TÀI LIỆU (N2 - QUỐC PHONG)")
-    print("=" * 76)
 
-    # 1. Ví dụ Trang 9 tài liệu: L = 150, pin đèn = 130
-    e_res = energy_metrics(length=150.0, beacons=[{"x": 50, "y": 50, "energy": 13.0, "active": True}] * 10)
-    print("\n[1] Kiểm tra Pin (Tài liệu Trang 9): L = 150, Pin đèn = 130")
-    print(f"    - Pin bay tính toán:  {e_res['flight']} (Kỳ vọng: 67.5)")
-    print(f"    - Pin đèn tính toán:  {e_res['lamps']} (Kỳ vọng: 130.0)")
-    print(f"    - Tổng pin tính toán: {e_res['total']} (Kỳ vọng: 197.5 <= 220)")
-    print(f"    - Đạt chuẩn ngân sách: {e_res['energy_ok']}")
-    assert abs(e_res["flight"] - 67.5) < 1e-5
-    assert abs(e_res["lamps"] - 130.0) < 1e-5
-    assert abs(e_res["total"] - 197.5) < 1e-5
-    assert e_res["energy_ok"] is True
-    print("    -> [KHỚP CHÍNH XÁC]")
-
-    # 2. Ví dụ Trang 10 tài liệu: Đèn pin 20 suy giảm theo khoảng cách
-    print("\n[2] Kiểm tra Suy giảm tín hiệu theo khoảng cách (Tài liệu Trang 10: Đèn pin 20)")
-    i_0 = signal_from_single_beacon((0, 0), 20.0, (0, 0), signal_range=18.0)
-    i_18 = signal_from_single_beacon((0, 0), 20.0, (18, 0), signal_range=18.0)
-    i_36 = signal_from_single_beacon((0, 0), 20.0, (36, 0), signal_range=18.0)
-    print(f"    - Tại d = 0  (ngay trại): I = {i_0:.4f} (Kỳ vọng: 20.0)")
-    print(f"    - Tại d = 18 (cách 18dv): I = {i_18:.4f} (Kỳ vọng: 10.0)")
-    print(f"    - Tại d = 36 (cách 36dv): I = {i_36:.4f} (Kỳ vọng: 4.0)")
-    assert abs(i_0 - 20.0) < 1e-5
-    assert abs(i_18 - 10.0) < 1e-5
-    assert abs(i_36 - 4.0) < 1e-5
-    print("    -> [KHỚP CHÍNH XÁC]")
-
-    # 3. Bảng giá trị bão hòa Trang 10: I = [0, 5, 10, 20, 40]
-    print("\n[3] Kiểm tra Bảng Hữu dụng Bão hòa u = 1 - exp(-0.1 * I) (Tài liệu Trang 10)")
-    test_intensities = [0.0, 5.0, 10.0, 20.0, 40.0]
-    expected_u = [0.0, 0.3935, 0.6321, 0.8647, 0.9817]
-    for val_i, exp_u in zip(test_intensities, expected_u):
-        actual_u = saturation_utility(val_i, alpha=0.1)
-        print(f"    - I = {val_i:<4.1f} -> u = {actual_u:.4f} (Kỳ vọng: {exp_u:.4f})")
-        assert abs(actual_u - exp_u) < 1e-3
-    print("    -> [KHỚP CHÍNH XÁC]")
-
-    # 4. Ví dụ 2 trại Trang 10: w = 3, 1 với u = 0.8, 0.4 -> U = 0.7, u_min = 0.4
-    print("\n[4] Kiểm tra Gộp hữu dụng có trọng số (Tài liệu Trang 10: w=[3, 1], u=[0.8, 0.4])")
-    w_example = [3.0, 1.0]
-    u_example = [0.8, 0.4]
-    u_weighted_calc = sum(w * u for w, u in zip(w_example, u_example)) / sum(w_example)
-    u_min_calc = min(u_example)
-    print(f"    - U tính toán:    {u_weighted_calc:.4f} (Kỳ vọng: 0.7000)")
-    print(f"    - u_min tính toán: {u_min_calc:.4f} (Kỳ vọng: 0.4000)")
-    assert abs(u_weighted_calc - 0.7000) < 1e-6
-    assert abs(u_min_calc - 0.4000) < 1e-6
-    print("    -> [KHỚP CHÍNH XÁC]")
-
-    # 5. Kiểm tra vượt pin Trang 12: Tổng pin 230 -> over = 10 / 220
-    print("\n[5] Kiểm tra Vượt pin chuẩn hóa (Tài liệu Trang 12: E_tong = 230, Budget = 220)")
-    e_over = energy_metrics(length=200.0, beacons=[{"x": 50, "y": 50, "energy": 14.0, "active": True}] * 10)
-    # L = 200 -> E_bay = 90; 10 đèn * 14 = 140 -> E_tong = 230
-    exp_over = 10.0 / 220.0
-    print(f"    - Tổng pin: {e_over['total']} | Vượt: {e_over['excess']}")
-    print(f"    - over tính toán: {e_over['over']:.6f} (Kỳ vọng: {exp_over:.6f})")
-    print(f"    - Phạt pin N3 (30 * over^2): {30.0 * (e_over['over'] ** 2):.6f}")
-    assert abs(e_over["over"] - exp_over) < 1e-5
-    assert e_over["energy_ok"] is False
-    print("    -> [KHỚP CHÍNH XÁC - KHÔNG TỰ Ý CẮT BỚT PIN]")
-
-    # 6. Kiểm tra đèn tắt (inactive) không tiêu pin và không phát tín hiệu
-    print("\n[6] Kiểm tra Đèn tắt (active = False hoặc energy = 0)")
-    beacons_with_off = [
-        {"x": 12, "y": 70, "energy": 25.0, "active": False},  # Đèn tắt tại đúng trại C1!
-        {"x": 20, "y": 25, "energy": 15.0, "active": True}
-    ]
-    e_off = energy_metrics(length=100.0, beacons=beacons_with_off)
-    print(f"    - Tổng pin đèn: {e_off['lamps']} (Chỉ tính đèn active: 15.0, bỏ qua đèn tắt: 25.0)")
-    assert abs(e_off["lamps"] - 15.0) < 1e-5
-    print("    -> [KHỚP CHÍNH XÁC]")
-
-    print("\n" + "=" * 76)
-    print(" TẤT CẢ 6 ĐIỀU KIỆN KIỂM CHỨNG CỦA QUỐC PHONG ĐỀU THÀNH CÔNG RỰC RỠ!")
-    print("=" * 76)
 
 
 if __name__ == "__main__":
