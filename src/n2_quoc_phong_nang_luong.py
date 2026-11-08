@@ -2,12 +2,7 @@
 src/n2_quoc_phong_nang_luong.py - Module N2: Quốc Phong
 Dự án: Nhóm 4 - Whale Optimization Algorithm (WOA) - Bài toán Đom Đóm
 
-Trách nhiệm phân công:
-1. Tính túi pin chung (Pin bay: 0.45 * L, Pin đèn thực dùng: sum(e_k), Tổng pin <= 220).
-2. Tính phần vượt pin chuẩn hóa over = max(0, total - 220) / 220 (không tự gọt pin).
-3. Tính tín hiệu suy giảm theo khoảng cách: I_km = e_k / (1 + d_km^2 / 18^2).
-4. Tính độ hữu dụng bão hòa u_m = 1 - exp(-0.1 * I_m), hữu dụng có trọng số U và u_min.
-5. Cung cấp báo cáo đọc mức 8 trại cứu trợ và trại yếu nhất.
+
 """
 
 import math
@@ -73,17 +68,7 @@ def energy_metrics(
     beacons: Sequence[Any],
     problem: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
-    """
-    BƯỚC 1 & 2: Tính toán toàn diện năng lượng bay, năng lượng đèn và mức vượt pin.
-    
-    Quy tắc cốt lõi:
-    - Túi pin cố định: 220 đơn vị.
-    - over = max(0, total - 220) / 220 (chuẩn hóa tỷ lệ vượt, KHÔNG tự ý cắt bớt pin).
-    - Phạt tương ứng của N3 là 30 * over^2.
-    
-    Đầu ra chuẩn bàn giao cho Phúc Khang (N3):
-      flight, lamps, total, over, excess, budget, energy_ok.
-    """
+   
     budget = DEFAULT_BATTERY_BUDGET
     flight_cost = DEFAULT_FLIGHT_COST_RATE
 
@@ -158,11 +143,7 @@ def signal_from_single_beacon(
     camp_pos: Tuple[float, float],
     signal_range: float = DEFAULT_SIGNAL_SCALE_DIST
 ) -> float:
-    """
-    Tính tín hiệu từ một đèn phát k truyền đến trại m.
-    Công thức: I_km = e_k / (1 + d_km^2 / R^2) với R = 18.
-    Nếu e_k = 0 (đèn tắt), I_km = 0.
-    """
+  
     if beacon_energy <= 0.0:
         return 0.0
     d_sq = (beacon_pos[0] - camp_pos[0]) ** 2 + (beacon_pos[1] - camp_pos[1]) ** 2
@@ -187,9 +168,7 @@ def camp_detailed_breakdown(
     beacons: Sequence[Any],
     problem: Optional[Dict[str, Any]] = None
 ) -> List[Dict[str, Any]]:
-    """
-    BƯỚC 5: Đọc chi tiết mức độ phục vụ từng trại trong số 8 trại cứu trợ.
-    """
+    
     camps_data = []
     signal_range = DEFAULT_SIGNAL_SCALE_DIST
     alpha = DEFAULT_UTILITY_ALPHA
@@ -253,18 +232,7 @@ def signal_metrics(
     beacons: Sequence[Any],
     problem: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
-    """
-    BƯỚC 3 & 4: Tính toán toàn diện tín hiệu và độ hữu dụng bão hòa cho 8 trại.
     
-    Quy tắc cốt lõi:
-    - Tín hiệu: I_m = sum_k ( e_k / (1 + d^2 / 18^2) ).
-    - Hữu dụng cá nhân: u_m = 1 - exp(-0.1 * I_m).
-    - Hữu dụng toàn hệ thống có trọng số: U = sum(w_m * u_m) / sum(w_m).
-    - Mức phục vụ tối thiểu: u_min = min(u_m).
-    
-    Đầu ra chuẩn bàn giao cho Phúc Khang (N3):
-      utility_sat, minimum_service, levels, satisfaction, camp_breakdown.
-    """
     breakdown = camp_detailed_breakdown(beacons, problem=problem)
 
     levels = [item["intensity"] for item in breakdown]
