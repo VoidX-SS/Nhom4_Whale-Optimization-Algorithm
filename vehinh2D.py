@@ -328,7 +328,6 @@ def one_shot_comparison(results, summaries, labels, title, subtitle, filename):
     plt.close(fig)
     print(f"->results/figures/{filename}")
 
-# --- 4.2 HÀM XUẤT HÌNH DIỄN BIẾN TIẾN HÓA ĐÀN (6 MỐC THỜI ĐIỂM) ---
 def population_story(result, case_label, filename):
     fig, axes = plt.subplots(2, 3, figsize=(19.2, 10.8), dpi=100, facecolor="#faf9f5")
     snapshots = result["snapshots"]
@@ -350,7 +349,6 @@ def population_story(result, case_label, filename):
     plt.close(fig)
     print(f"->results/figures/{filename}")
 
-# --- 4.3 HÀM XUẤT HÌNH PHÂN TÍCH PIN & HỮU DỤNG TRẠI ---
 def utility_and_energy(result, case_label, filename):
     report = chosen_report(result)
     fig, axes = plt.subplots(1, 2, figsize=(16, 6), dpi=100, facecolor="#faf9f5")
