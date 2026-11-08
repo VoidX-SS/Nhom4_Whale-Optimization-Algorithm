@@ -2,13 +2,6 @@
 src/n2_quoc_phong_nang_luong.py - Module N2: Quốc Phong
 Dự án: Nhóm 4 - Whale Optimization Algorithm (WOA) - Bài toán Đom Đóm
 
-Trách nhiệm phân công:
-1. Tính túi pin chung (Pin bay: 0.45 * L, Pin đèn thực dùng: sum(e_k), Tổng pin <= 220).
-2. Tính phần vượt pin chuẩn hóa over = max(0, total - 220) / 220.
-3. Tính tín hiệu suy giảm theo khoảng cách: I_km = e_k / (1 + d_km^2 / 18^2).
-4. Tính độ hữu dụng bão hòa u_m = 1 - exp(-0.1 * I_m), hữu dụng có trọng số U và u_min.
-5. Cung cấp báo cáo chi tiết đọc mức 8 trại và chỉ số tập trung năng lượng H_E.
-6. Giao diện chuẩn bàn giao cho Phúc Khang (N3), Vân Lâm (N6), và Trang Nguyễn (N9).
 """
 
 import math
