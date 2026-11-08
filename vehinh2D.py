@@ -47,16 +47,16 @@ def get_base_problem(map_type="co_ban"):
         ]
     elif map_type == "khe_hep":  # Ca B
         prob["storms"] = [
-            {"name": "V1", "x": 40, "y": 25, "r": 18},
-            {"name": "V2", "x": 40, "y": 75, "r": 18},
+            {"name": "V1", "x": 40, "y": 29, "r": 16},
+            {"name": "V2", "x": 40, "y": 71, "r": 16},
             {"name": "V3", "x": 70, "y": 50, "r": 12},
         ]
-        prob["gate"] = {"x": 40, "y_min": 43, "y_max": 57}
+        prob["gate"] = {"x": 40, "y_min": 47, "y_max": 53}
     elif map_type == "chan_duong":  # Ca C
         prob["storms"] = [
-            {"name": "V1", "x": 25, "y": 50, "r": 15},
-            {"name": "V2", "x": 50, "y": 50, "r": 15},
-            {"name": "V3", "x": 75, "y": 50, "r": 15},
+            {"name": "V1", "x": 28, "y": 50, "r": 14},
+            {"name": "V2", "x": 50, "y": 50, "r": 14},
+            {"name": "V3", "x": 72, "y": 50, "r": 14},
         ]
     return prob
 
