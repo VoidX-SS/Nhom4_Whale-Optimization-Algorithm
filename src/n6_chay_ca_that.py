@@ -13,9 +13,10 @@ from src.n6_van_lam_woa import woa, save_history_csv
 def main(name="khe_hep", l_mode="shared_l", n_whales=30, n_iter=200, seed=1):
     problem = load_problem(name)
 
-    # 30 biến theo thứ tự (x1, y1, pin1, ..., x10, y10, pin10): x, y trong [0,100], pin trong [0,25]
+    # 30 biến theo thứ tự (x1, y1, pin1, ..., x10, y10, pin10): x, y trong [0,100],
+    # pin trong [0, beacon_max]. Lấy beacon_max từ problem, đúng như check_box của N3 (khoảng 25).
     lower = np.array([0.0, 0.0, 0.0] * 10)
-    upper = np.array([100.0, 100.0, 25.0] * 10)
+    upper = np.array([100.0, 100.0, float(problem["beacon_max"])] * 10)
 
     # Ba hàm của N5: khởi tạo, cập nhật (ba nhánh WOA), sửa biên (kẹp về biên)
     init_fn, update_fn, bounds_fn = make_woa_hooks(l_mode, "clip", seed)
