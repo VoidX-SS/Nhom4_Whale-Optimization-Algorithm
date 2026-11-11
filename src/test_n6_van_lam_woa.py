@@ -80,4 +80,14 @@ def gate_but_not_valid(x):
 r5 = woa(gate_but_not_valid, LO, HI, N, T, seed=1)
 assert r5["best_gate"] is None and r5["best_valid"] is None
 
-print("Tất cả 10 kiểm tra đều đạt")
+# 11. a_fn tùy chỉnh được dùng đúng; không truyền thì giữ lịch tuyến tính như cũ
+import math
+cos_a = lambda k, T_: 1.0 + math.cos(math.pi * k / T_)
+r6 = woa(toy, LO, HI, N, T, seed=3, a_fn=cos_a)
+assert all(abs(h["a"] - cos_a(h["iteration"] - 2, T)) < 1e-12 for h in r6["history"][1:])
+r7 = woa(toy, LO, HI, N, T, seed=3)
+assert all(abs(h["a"] - (2 - 2 * (h["iteration"] - 2) / T)) < 1e-12 for h in r7["history"][1:])
+assert r7["history"][1]["a"] == 2.0 and r7["history"][1]["a2"] == -1.0   # lần cập nhật đầu: t = 0 như WOA.m
+assert r7["best_overall"]["score"] == r3["best_overall"]["score"]
+
+print("Tất cả 11 kiểm tra đều đạt")
