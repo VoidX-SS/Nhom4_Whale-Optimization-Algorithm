@@ -1,6 +1,5 @@
 """
 n6_van_lam_woa.py - N6 Vân Lâm (Nhóm 2)
-
 """
 import csv
 import math
