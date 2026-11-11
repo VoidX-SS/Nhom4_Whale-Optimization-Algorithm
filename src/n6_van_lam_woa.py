@@ -71,7 +71,6 @@ def make_entry(x, rec, iteration, whale):
 
 def update_ledgers(ledgers, pop, recs, iteration):
     """
-    Cập nhật 3 sổ, gọi SAU KHI cả đàn đã được chấm.
       best_overall: J (score) thấp nhất, không cần hợp lệ
       best_valid  : base_score thấp nhất, chỉ xét cá voi valid
       best_gate   : base_score thấp nhất, chỉ xét cá voi vừa valid vừa through_gate
@@ -120,8 +119,18 @@ def check_population(snap, n_whales, lower, upper):
 # ======================================================================
 # PHẦN 3: HÀM WOA CHÍNH
 # ======================================================================
+def linear_a(k, n_iter):
+    """Lịch a mặc định a = 2 - 2k/T (đúng WOA.m). k đếm từ 0: lần cập nhật đầu tiên có k = 0, a = 2."""
+    return 2 - 2 * k / n_iter
+
+
+def author_a2(k, n_iter):
+    """Luật a2 của tác giả: giảm đều từ -1 về -2."""
+    return -1 - k / n_iter
+
+
 def woa(evaluate, lower, upper, n_whales, n_iter, seed=0, snapshot_every=10, b=1.0,
-        init_fn=None, update_fn=None, bounds_fn=None):
+        init_fn=None, update_fn=None, bounds_fn=None, a_fn=None, a2_fn=None):
     """
     Chạy WOA với n_whales cá voi trong n_iter lượt chấm (tổng N*T lần chấm).
 
@@ -130,6 +139,10 @@ def woa(evaluate, lower, upper, n_whales, n_iter, seed=0, snapshot_every=10, b=1
       sửa biên  ->  chấm cả đàn  ->  cập nhật 3 sổ  ->  ghi history  ->  chụp snapshot
     Lượt 1 chấm luôn đàn vừa khởi tạo. Chạy xong lượt chấm cuối là dừng.
 
+    a_fn(k, n_iter) và a2_fn(k, n_iter) là lịch giảm của a và a2 ở lần cập nhật thứ k
+    (k = 0..n_iter-2, đếm từ 0 như t trong WOA.m). Không truyền thì dùng linear_a và author_a2. Ngách "ba lịch a" của N4
+    truyền vào, ví dụ a_fn=lambda k, T: get_a_value(k, T, "cosine").
+
     Trả về dict gồm: best_overall, best_valid, best_gate, history, snapshots,
                      final_population, n_evaluations.
     """
@@ -137,6 +150,8 @@ def woa(evaluate, lower, upper, n_whales, n_iter, seed=0, snapshot_every=10, b=1
     init_fn = init_fn or default_init
     update_fn = update_fn or default_update
     bounds_fn = bounds_fn or default_bounds
+    a_fn = a_fn or linear_a
+    a2_fn = a2_fn or author_a2
 
     lower = np.asarray(lower, dtype=float)
     upper = np.asarray(upper, dtype=float)
@@ -154,9 +169,9 @@ def woa(evaluate, lower, upper, n_whales, n_iter, seed=0, snapshot_every=10, b=1
         # --- Bước 1: cập nhật vị trí (lượt 1 bỏ qua vì đàn vừa khởi tạo) ---
         a, a2 = None, None
         if t > 1:
-            k = t - 1                                # đây là lần cập nhật thứ k
-            a = 2 - 2 * k / n_iter                   # a giảm đều từ 2 về gần 0
-            a2 = -1 - k / n_iter                     # a2 giảm đều từ -1 về -2
+            k = t - 2                                # lần cập nhật thứ k, đếm từ 0 như t trong WOA.m (lần đầu: a = 2, a2 = -1)
+            a = a_fn(k, n_iter)                      # mặc định: giảm đều từ 2 về gần 0
+            a2 = a2_fn(k, n_iter)                    # mặc định: giảm đều từ -1 về -2
             leader = ledgers["best_overall"]["x"].copy()   # chỉ best_overall dẫn đàn
             pop = update_fn(pop.copy(), leader, a, a2, rng, b)
 
