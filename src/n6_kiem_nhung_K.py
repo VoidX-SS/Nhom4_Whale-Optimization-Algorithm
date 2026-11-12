@@ -7,15 +7,6 @@ Nếu có chỗ đổi nghĩa là mô hình K6 và K10 chưa khớp nhau.
 
 Mỗi seed chạy woa ở K nhỏ trên ca A, lấy best_valid của seed đó (nếu có) để kiểm nhúng.
 Đây chỉ là bài kiểm chứng mô hình. KHÔNG đưa nghiệm đã nhúng vào đàn đo chính của K10.
-
-File này không tự import code của người khác. Mọi thứ phụ thuộc vào N3 và N4 đi qua 2 hàm
-bạn truyền vào:
-  evaluate_K(vector, K) -> dict chuẩn gồm:
-        score, base_score, valid, through_gate   (để chạy woa)
-        path        : danh sách điểm (x, y) của đường bay đầy đủ (Start, các điểm, Goal)
-        pin_total   : tổng pin các đèn đang bật
-        U           : hữu dụng trung bình có trọng số
-  active_fn(vector, K) -> danh sách chỉ số (0..9) các đèn được chọn khi giải mã top-K
 """
 import csv
 import os
