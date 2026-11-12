@@ -1,8 +1,5 @@
 # Phần Năng Lượng và Hữu Dụng Bão Hòa — Đề Bài Đom Đóm
 
-Tài liệu này diễn giải riêng phần bài toán năng lượng và tín hiệu do Quốc Phong (N2) phụ trách, phục vụ đối chiếu công thức và làm rõ các phép tính trong `src/n2_quoc_phong_nang_luong.py`.
-
----
 
 ## 1. Túi pin chung 220: Bay vs. Thắp đèn
 
