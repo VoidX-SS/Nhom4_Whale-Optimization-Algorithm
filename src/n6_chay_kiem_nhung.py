@@ -4,11 +4,6 @@ n6_chay_kiem_nhung.py - N6 Vân Lâm, bước 5: chạy kiểm nhúng K6 -> K10 
 Chạy từ THƯ MỤC GỐC của repo:
     python -m src.n6_chay_kiem_nhung            # đủ: 30 seed, N = 30, T = 800
     python -m src.n6_chay_kiem_nhung 3 40       # chạy thử nhanh: 3 seed, T = 40
-
-Dùng hàm chấm của Yến (evaluate_solution, decode_solution trong n4_hoang_yen_du_lieu.py)
-nên KHÔNG cần file của Khang. Nếu có file của Ngân (n5_quynh_ngan_buoc_woa.py) thì dùng,
-chưa có thì dùng bước cập nhật dự phòng trong n6_van_lam_woa.py (ghi rõ trong đầu ra).
-Ghi: results/K_embedding_check.csv
 """
 import sys
 
@@ -20,7 +15,6 @@ from src.n6_kiem_nhung_K import chay_kiem_nhung
 
 
 def make_adapters(problem):
-    """Đổi kết quả của Yến sang dạng woa và phép kiểm nhúng cần."""
     def evaluate_K(vec, K):
         r = evaluate_solution(list(vec), problem, K=K)
         d = r["decoded"]
