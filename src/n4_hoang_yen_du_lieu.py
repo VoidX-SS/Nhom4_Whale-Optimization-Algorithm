@@ -23,6 +23,7 @@ import sys
 import json
 import math
 import random
+import statistics
 from typing import Dict, List, Tuple, Any, Optional, Union
 
 # Các thông số mặc định của bài toán
@@ -611,12 +612,12 @@ def run_woa_single_experiment(
 
 
 def benchmark_3_a_schedules_on_case_B(
-    num_runs: int = 3,
-    max_iter: int = 80,
+    num_runs: int = 10,
+    max_iter: int = 400,
     pop_size: int = 25,
     K: int = 10
 ) -> Dict[str, Any]:
-    """Thực nghiệm đối chứng 3 lịch a (linear, cosine, quadratic) trên Ca B."""
+    """Thực nghiệm đối chứng 3 lịch a (linear, cosine, quadratic) trên Ca B (T=400, nhiều lần lặp)."""
     problem_B = load_problem("B")
     settings = get_default_settings()
 
@@ -624,11 +625,11 @@ def benchmark_3_a_schedules_on_case_B(
     summary_results = {mode: [] for mode in modes}
 
     print("\n" + "=" * 75)
-    print(f"TIẾN HÀNH ĐỐI CHỨNG 3 LỊCH a TRÊN CA B (KHE HẸP) - SỐ LƯỢT = {num_runs}")
+    print(f"TIẾN HÀNH ĐỐI CHỨNG 3 LỊCH a TRÊN CA B (KHE HẸP) - T = {max_iter}, SỐ LƯỢT = {num_runs}")
     print("=" * 75)
 
     for mode in modes:
-        print(f"-> Đang chạy lịch a = '{mode}' ...")
+        print(f"-> Đang chạy lịch a = '{mode}' ({num_runs} runs, T={max_iter}) ...")
         for run_id in range(num_runs):
             seed = 42 + run_id * 101
             res = run_woa_single_experiment(
@@ -650,8 +651,22 @@ def benchmark_3_a_schedules_on_case_B(
         valid_f0_list = [r["best_valid_score"] for r in valid_runs]
         overall_j_list = [r["best_overall_score"] for r in runs]
 
-        avg_valid_f0 = (sum(valid_f0_list) / len(valid_f0_list)) if valid_f0_list else None
+        lengths = [r["best_valid_metrics"]["length"] for r in valid_runs]
+        batteries = [r["best_valid_metrics"]["total_energy"] for r in valid_runs]
+        u_list = [r["best_valid_metrics"]["U"] for r in valid_runs]
+
         best_valid_f0 = min(valid_f0_list) if valid_f0_list else None
+        avg_valid_f0 = statistics.mean(valid_f0_list) if valid_f0_list else None
+        std_valid_f0 = statistics.stdev(valid_f0_list) if len(valid_f0_list) > 1 else 0.0
+
+        avg_L = statistics.mean(lengths) if lengths else None
+        std_L = statistics.stdev(lengths) if len(lengths) > 1 else 0.0
+
+        avg_battery = statistics.mean(batteries) if batteries else None
+        std_battery = statistics.stdev(batteries) if len(batteries) > 1 else 0.0
+
+        avg_U = statistics.mean(u_list) if u_list else None
+        std_U = statistics.stdev(u_list) if len(u_list) > 1 else 0.0
 
         stats[mode] = {
             "mode_name": mode,
@@ -662,6 +677,13 @@ def benchmark_3_a_schedules_on_case_B(
             "gate_passage_rate_percent": round(len(gate_runs) / len(runs) * 100.0, 1),
             "best_valid_f0": round(best_valid_f0, 4) if best_valid_f0 is not None else None,
             "avg_valid_f0": round(avg_valid_f0, 4) if avg_valid_f0 is not None else None,
+            "std_valid_f0": round(std_valid_f0, 4) if std_valid_f0 is not None else 0.0,
+            "avg_L": round(avg_L, 2) if avg_L is not None else None,
+            "std_L": round(std_L, 2) if std_L is not None else 0.0,
+            "avg_battery": round(avg_battery, 2) if avg_battery is not None else None,
+            "std_battery": round(std_battery, 2) if std_battery is not None else 0.0,
+            "avg_U": round(avg_U, 4) if avg_U is not None else None,
+            "std_U": round(std_U, 4) if std_U is not None else 0.0,
             "avg_overall_J": round(sum(overall_j_list) / len(overall_j_list), 4),
         }
 
@@ -717,15 +739,17 @@ def run_full_validation():
         print(f"{label:<20} | {a_lin:<12.4f} | {a_cos:<12.4f} | {a_quad:<14.4f} | {a2_val:<12.4f}")
 
     print("\n" + "=" * 78)
-    print(" 5. THỰC NGHIỆM ĐỐI CHỨNG 3 LỊCH a TRÊN CA B (KHE HẸP)")
+    print(" 5. THỰC NGHIỆM ĐỐI CHỨNG 3 LỊCH a TRÊN CA B (KHE HẸP - T=400, 10 RUNS)")
     print("=" * 78)
-    stats = benchmark_3_a_schedules_on_case_B(num_runs=3, max_iter=80, pop_size=25, K=10)
-    print("\nKẾT QUẢ ĐỐI CHỨNG TRÊN CA B:")
-    print(f"{'Ngách Lịch a':<16} | {'Tỷ lệ hợp lệ':<15} | {'Tỷ lệ qua khe':<15} | {'f0 Hợp lệ Tốt nhất':<20}")
-    print("-" * 70)
+    stats = benchmark_3_a_schedules_on_case_B(num_runs=10, max_iter=400, pop_size=25, K=10)
+    print("\nKẾT QUẢ ĐỐI CHỨNG TRÊN CA B (THỐNG KÊ Ý NGHĨA KHOA HỌC):")
+    print(f"{'Ngách Lịch a':<14} | {'Hợp lệ':<8} | {'Qua khe':<8} | {'f0 Tốt nhất':<12} | {'f0 Mean ± Std':<22} | {'Hữu dụng U (Mean)':<18}")
+    print("-" * 92)
     for mode, st in stats.items():
-        bv = f"{st['best_valid_f0']:.4f}" if st['best_valid_f0'] is not None else "Chưa có"
-        print(f"{mode:<16} | {st['success_rate_percent']:<14.1f}% | {st['gate_passage_rate_percent']:<14.1f}% | {bv:<20}")
+        bv = f"{st['best_valid_f0']:.4f}" if st['best_valid_f0'] is not None else "N/A"
+        av = f"{st['avg_valid_f0']:.4f} ± {st['std_valid_f0']:.4f}" if st['avg_valid_f0'] is not None else "N/A"
+        au = f"{st['avg_U']:.4f} ± {st['std_U']:.4f}" if st['avg_U'] is not None else "N/A"
+        print(f"{mode:<14} | {st['success_rate_percent']:<6.1f}% | {st['gate_passage_rate_percent']:<6.1f}% | {bv:<12} | {av:<22} | {au:<18}")
     print("\n" + "=" * 78)
     print(" TẤT CẢ KIỂM TRA ĐỀU THÀNH CÔNG VÀ CHÍNH XÁC!")
     print("=" * 78)
