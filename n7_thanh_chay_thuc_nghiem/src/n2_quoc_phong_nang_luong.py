@@ -1,0 +1,260 @@
+"""
+src/n2_quoc_phong_nang_luong.py - Module N2: Quốc Phong
+Dự án: Nhóm 4 - Whale Optimization Algorithm (WOA) - Bài toán Đom Đóm
+
+
+"""
+
+import math
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+
+# Các hằng số mặc định theo đúng đề bài chốt
+DEFAULT_BATTERY_BUDGET: float = 220.0     # Túi pin tối đa 220 đơn vị
+DEFAULT_FLIGHT_COST_RATE: float = 0.45   # 0.45 pin trên 1 đơn vị khoảng cách
+DEFAULT_SIGNAL_SCALE_DIST: float = 18.0  # Thang khoảng cách R = 18
+DEFAULT_UTILITY_ALPHA: float = 0.1       # Hệ số bão hòa alpha = 0.1
+DEFAULT_BEACON_MAX: float = 25.0         # Pin tối đa một đèn đề xuất
+
+
+# ======================================================================
+# PHẦN 1: MÔ HÌNH NĂNG LƯỢNG VÀ TÚI PIN CHUNG (BƯỚC 1 & 2)
+# ======================================================================
+
+def calculate_flight_energy(length: float, flight_cost: float = DEFAULT_FLIGHT_COST_RATE) -> float:
+    """
+    Tính năng lượng tiêu hao cho quãng đường bay của UAV.
+    Công thức: E_bay = 0.45 * L
+    """
+    if length < 0.0:
+        raise ValueError(f"Chiều dài đường bay không được âm: length = {length}")
+    return float(flight_cost * length)
+
+
+def extract_beacon_energy(beacon: Any) -> float:
+    """
+    Trích xuất năng lượng thực tế của một đèn phát tín hiệu.
+    Hỗ trợ cả dict (chuẩn hoặc legacy), DecodedSolution, hoặc tuple.
+    Nếu đèn không kích hoạt (active == False), năng lượng thực tế là 0.0.
+    """
+    if isinstance(beacon, dict):
+        if "active" in beacon and not beacon["active"]:
+            return 0.0
+        return float(beacon.get("energy", beacon.get("pin", beacon.get("power", 0.0))))
+    if hasattr(beacon, "energy"):
+        return float(getattr(beacon, "energy"))
+    if hasattr(beacon, "light_powers"):
+        return float(getattr(beacon, "light_powers"))
+    if isinstance(beacon, (list, tuple)) and len(beacon) >= 3:
+        return float(beacon[2])
+    return 0.0
+
+
+def calculate_lamp_energy(beacons: Sequence[Any]) -> float:
+    """
+    Tính tổng năng lượng tiêu hao cho các thiết bị đèn thực sự được bật.
+    Công thức: E_den = sum(e_k) với k thuộc tập đèn được kích hoạt.
+    Các đèn tắt (e_k = 0 hoặc active = False) không tiêu tốn pin.
+    """
+    total_lamps = 0.0
+    for b in beacons:
+        e = extract_beacon_energy(b)
+        if e > 0.0:
+            total_lamps += e
+    return float(total_lamps)
+
+
+def energy_metrics(
+    length: float,
+    beacons: Sequence[Any],
+    problem: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
+   
+    budget = DEFAULT_BATTERY_BUDGET
+    flight_cost = DEFAULT_FLIGHT_COST_RATE
+
+    if problem is not None:
+        budget = float(problem.get("battery_max", problem.get("budget", DEFAULT_BATTERY_BUDGET)))
+        flight_cost = float(problem.get("flight_energy_rate", problem.get("flight_cost", DEFAULT_FLIGHT_COST_RATE)))
+
+    e_flight = calculate_flight_energy(length, flight_cost=flight_cost)
+    e_lamps = calculate_lamp_energy(beacons)
+    e_total = e_flight + e_lamps
+
+    excess = max(0.0, e_total - budget)
+    over_pin = excess / budget if budget > 0.0 else 0.0
+    energy_ok = bool(e_total <= budget + 1e-7)
+    active_beacons_count = sum(1 for b in beacons if extract_beacon_energy(b) > 0.001)
+
+    return {
+        "flight": round(e_flight, 6),
+        "lamps": round(e_lamps, 6),
+        "total": round(e_total, 6),
+        "over": round(over_pin, 8),
+        "excess": round(excess, 6),
+        "budget": budget,
+        "energy_ok": energy_ok,
+        "active_beacons_count": active_beacons_count,
+    }
+
+
+# ======================================================================
+# PHẦN 2: MÔ HÌNH TÍN HIỆU VÀ ĐỘ HỮU DỤNG BÃO HÒA (BƯỚC 3 & 4)
+# ======================================================================
+
+def calculate_distance(p1: Sequence[float], p2: Sequence[float]) -> float:
+    """Khoảng cách Euclid hình học giữa hai điểm trong mặt phẳng 2D."""
+    dx = p2[0] - p1[0]
+    dy = p2[1] - p1[1]
+    return math.hypot(dx, dy)
+
+
+def extract_beacon_position(beacon: Any) -> Tuple[float, float]:
+    """Trích xuất tọa độ (x, y) của một trạm phát tín hiệu."""
+    if isinstance(beacon, dict):
+        if "pos" in beacon:
+            return float(beacon["pos"][0]), float(beacon["pos"][1])
+        return float(beacon.get("x", 0.0)), float(beacon.get("y", 0.0))
+    if isinstance(beacon, (list, tuple)) and len(beacon) >= 2:
+        return float(beacon[0]), float(beacon[1])
+    if hasattr(beacon, "x") and hasattr(beacon, "y"):
+        return float(getattr(beacon, "x")), float(getattr(beacon, "y"))
+    raise ValueError(f"Không thể trích xuất tọa độ từ beacon: {beacon}")
+
+
+def extract_camp_info(camp: Dict[str, Any], default_id: int) -> Tuple[str, Tuple[float, float], float]:
+    """Trích xuất tên, tọa độ và trọng số nhu cầu của một trại cứu trợ."""
+    name = str(camp.get("name", f"C{default_id}"))
+    if "pos" in camp:
+        pos = (float(camp["pos"][0]), float(camp["pos"][1]))
+    elif "x" in camp and "y" in camp:
+        pos = (float(camp["x"]), float(camp["y"]))
+    else:
+        raise ValueError(f"Trại {name} thiếu thông tin tọa độ.")
+    
+    weight = float(camp.get("weight", camp.get("w", 1.0)))
+    if weight <= 0.0:
+        weight = 1.0
+    return name, pos, weight
+
+
+def signal_from_single_beacon(
+    beacon_pos: Tuple[float, float],
+    beacon_energy: float,
+    camp_pos: Tuple[float, float],
+    signal_range: float = DEFAULT_SIGNAL_SCALE_DIST
+) -> float:
+  
+    if beacon_energy <= 0.0:
+        return 0.0
+    d_sq = (beacon_pos[0] - camp_pos[0]) ** 2 + (beacon_pos[1] - camp_pos[1]) ** 2
+    r_sq = signal_range * signal_range
+    return float(beacon_energy / (1.0 + d_sq / r_sq))
+
+
+def saturation_utility(intensity: float, alpha: float = DEFAULT_UTILITY_ALPHA) -> float:
+    """
+    Hàm hữu dụng bão hòa cá nhân tại một trại:
+    Công thức: u_m = 1 - exp(-0.1 * I_m)
+    - Khi I_m = 0 -> u_m = 0.
+    - u_m luôn thuộc [0, 1) với mọi I_m hữu hạn.
+    - Lợi ích cận biên du/dI = 0.1 * exp(-0.1 * I) giảm dần khi I tăng.
+    """
+    if intensity <= 0.0:
+        return 0.0
+    return float(1.0 - math.exp(-alpha * intensity))
+
+
+def camp_detailed_breakdown(
+    beacons: Sequence[Any],
+    problem: Optional[Dict[str, Any]] = None
+) -> List[Dict[str, Any]]:
+    
+    camps_data = []
+    signal_range = DEFAULT_SIGNAL_SCALE_DIST
+    alpha = DEFAULT_UTILITY_ALPHA
+
+    if problem is not None:
+        camps_data = problem.get("camps", [])
+        signal_range = float(problem.get("signal_scale_dist", problem.get("signal_range", DEFAULT_SIGNAL_SCALE_DIST)))
+        alpha = float(problem.get("utility_decay", problem.get("alpha", DEFAULT_UTILITY_ALPHA)))
+
+    if not camps_data:
+        camps_data = [
+            {"id": 1, "name": "C1", "pos": [12.0, 70.0], "weight": 12.0},
+            {"id": 2, "name": "C2", "pos": [20.0, 25.0], "weight": 18.0},
+            {"id": 3, "name": "C3", "pos": [38.0, 31.0], "weight": 15.0},
+            {"id": 4, "name": "C4", "pos": [43.0, 85.0], "weight": 20.0},
+            {"id": 5, "name": "C5", "pos": [61.0, 43.0], "weight": 16.0},
+            {"id": 6, "name": "C6", "pos": [65.0, 83.0], "weight": 12.0},
+            {"id": 7, "name": "C7", "pos": [84.0, 63.0], "weight": 18.0},
+            {"id": 8, "name": "C8", "pos": [90.0, 22.0], "weight": 14.0},
+        ]
+
+    breakdown = []
+    for idx, camp in enumerate(camps_data, start=1):
+        c_name, c_pos, c_weight = extract_camp_info(camp, idx)
+
+        total_intensity = 0.0
+        beacon_contributions = []
+
+        for b_idx, b in enumerate(beacons, start=1):
+            b_pos = extract_beacon_position(b)
+            b_energy = extract_beacon_energy(b)
+            i_km = signal_from_single_beacon(b_pos, b_energy, c_pos, signal_range=signal_range)
+            dist = calculate_distance(b_pos, c_pos)
+            total_intensity += i_km
+            if b_energy > 0.0:
+                beacon_contributions.append({
+                    "beacon_index": b_idx,
+                    "beacon_pos": b_pos,
+                    "energy": b_energy,
+                    "distance": round(dist, 2),
+                    "signal_contribution": round(i_km, 4)
+                })
+
+        u_sat = saturation_utility(total_intensity, alpha=alpha)
+
+        breakdown.append({
+            "camp_id": idx,
+            "name": c_name,
+            "pos": list(c_pos),
+            "weight": c_weight,
+            "intensity": round(total_intensity, 4),
+            "utility": round(u_sat, 4),
+            "saturation_percent": round(u_sat * 100.0, 2),
+            "contributing_beacons": beacon_contributions
+        })
+
+    return breakdown
+
+
+def signal_metrics(
+    beacons: Sequence[Any],
+    problem: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
+    
+    breakdown = camp_detailed_breakdown(beacons, problem=problem)
+
+    levels = [item["intensity"] for item in breakdown]
+    satisfaction = [item["utility"] for item in breakdown]
+    weights = [item["weight"] for item in breakdown]
+
+    weighted_u_sum = sum(w * u for w, u in zip(weights, satisfaction))
+    total_weight = sum(weights) if weights else 1.0
+    u_system = weighted_u_sum / total_weight if total_weight > 0.0 else 0.0
+    u_min = min(satisfaction) if satisfaction else 0.0
+
+    weakest_camp = None
+    if breakdown:
+        weakest_camp = min(breakdown, key=lambda c: c["utility"])
+
+    return {
+        "utility_sat": round(u_system, 6),
+        "minimum_service": round(u_min, 6),
+        "levels": levels,
+        "satisfaction": satisfaction,
+        "total_weight": total_weight,
+        "weakest_camp_name": weakest_camp["name"] if weakest_camp else None,
+        "weakest_camp_utility": round(u_min, 6),
+        "camp_breakdown": breakdown
+    }
