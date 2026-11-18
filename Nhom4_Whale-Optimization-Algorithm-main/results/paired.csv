@@ -1,0 +1,9 @@
+variant,base,pairs,both_valid,only_variant_valid,only_base_valid,neither_valid,dU_n,dU_mean(variant-base),dU_sd_sample
+A_den_6,A_goc,30,29,0,0,1,29,0.0632,0.1614
+A_den_8,A_goc,30,29,0,0,1,29,-0.0228,0.1214
+A_l_independent,A_goc,30,29,1,0,0,29,0.1315,0.1784
+A_reinit,A_goc,30,29,1,0,0,29,0.1634,0.1481
+B_a_cosine,B_goc,30,30,0,0,0,30,-0.0031,0.1414
+B_a_quadratic,B_goc,30,30,0,0,0,30,-0.0120,0.1299
+B_l_independent,B_goc,30,30,0,0,0,30,0.1341,0.1796
+B_reinit,B_goc,30,26,0,4,0,26,0.1656,0.1965
