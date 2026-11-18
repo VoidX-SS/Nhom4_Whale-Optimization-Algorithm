@@ -1,0 +1,59 @@
+{
+ "problem": {
+  "function": "quadratic",
+  "dimensions": 1,
+  "lower": -20,
+  "upper": 20,
+  "target": 1e-08
+ },
+ "settings": {
+  "population": 30,
+  "iterations": 500,
+  "seed": 1,
+  "a_mode": "linear",
+  "l_mode": "shared_l",
+  "boundary": "clip",
+  "b": 1.0,
+  "snapshot_every": 10
+ },
+ "best_overall": {
+  "position": [
+   6.999999906566664
+  ],
+  "evaluation": {
+   "score": 8.729788226563898e-15,
+   "base_score": 8.729788226563898e-15,
+   "valid": true,
+   "values": [
+    6.999999906566664
+   ]
+  }
+ },
+ "best_valid": {
+  "position": [
+   6.999999906566664
+  ],
+  "evaluation": {
+   "score": 8.729788226563898e-15,
+   "base_score": 8.729788226563898e-15,
+   "valid": true,
+   "values": [
+    6.999999906566664
+   ]
+  }
+ },
+ "best_gate": null,
+ "first_valid_iteration": 0,
+ "history": [],
+ "snapshots": [],
+ "counts": {
+  "search": 1162,
+  "encircle": 6267,
+  "spiral": 7571,
+  "boundary_changes": 317
+ },
+ "final_population": [],
+ "evaluations": 15000,
+ "elapsed_seconds": 0.037015037999935885,
+ "core_version": "matlab-author-translation-v2"
+}

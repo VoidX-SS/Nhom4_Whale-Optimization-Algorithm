@@ -60,3 +60,4 @@ def path_metrics(points, storms, safety):
         "bad_segments": bad_segments,
         "backtrack": backtrack,
     }
+
