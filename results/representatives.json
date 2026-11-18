@@ -1,0 +1,17 @@
+{
+ "A_goc": {
+  "typical": 16,
+  "best": 27,
+  "worst": 5
+ },
+ "B_goc": {
+  "typical": 11,
+  "best": 25,
+  "worst": 3
+ },
+ "C_goc": {
+  "typical": 27,
+  "best": 25,
+  "worst": 10
+ }
+}
