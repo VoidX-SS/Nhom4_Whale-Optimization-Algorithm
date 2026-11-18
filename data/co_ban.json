@@ -1,0 +1,96 @@
+{
+  "name": "Bản đồ cơ bản",
+  "width": 100,
+  "height": 100,
+  "start": [
+    0,
+    50
+  ],
+  "target": [
+    100,
+    50
+  ],
+  "K": 10,
+  "budget": 220,
+  "beacon_max": 25,
+  "flight_cost": 0.45,
+  "alpha": 0.1,
+  "signal_range": 18,
+  "safety": 2,
+  "length_weight": 0.12,
+  "collision_weight": 100,
+  "battery_weight": 30,
+  "camps": [
+    {
+      "name": "C1",
+      "x": 12,
+      "y": 70,
+      "weight": 12
+    },
+    {
+      "name": "C2",
+      "x": 20,
+      "y": 25,
+      "weight": 18
+    },
+    {
+      "name": "C3",
+      "x": 38,
+      "y": 31,
+      "weight": 15
+    },
+    {
+      "name": "C4",
+      "x": 43,
+      "y": 85,
+      "weight": 20
+    },
+    {
+      "name": "C5",
+      "x": 61,
+      "y": 43,
+      "weight": 16
+    },
+    {
+      "name": "C6",
+      "x": 65,
+      "y": 83,
+      "weight": 12
+    },
+    {
+      "name": "C7",
+      "x": 84,
+      "y": 63,
+      "weight": 18
+    },
+    {
+      "name": "C8",
+      "x": 90,
+      "y": 22,
+      "weight": 14
+    }
+  ],
+  "storms": [
+    {
+      "name": "V1",
+      "x": 28,
+      "y": 48,
+      "r": 11
+    },
+    {
+      "name": "V2",
+      "x": 51,
+      "y": 66,
+      "r": 12
+    },
+    {
+      "name": "V3",
+      "x": 73,
+      "y": 40,
+      "r": 11
+    }
+  ],
+  "slots": 10,
+  "active_lights": 10,
+  "map_weight": 100
+}

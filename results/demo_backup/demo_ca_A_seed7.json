@@ -106,6 +106,10 @@
     "p_threshold": 0.5
   },
   "best_overall": {
+    "score": -0.13932533344896342,
+    "base_score": -0.13933006877463194,
+    "valid": false,
+    "through_gate": false,
     "x": [
       0.0,
       52.16897063800515,
@@ -138,14 +142,14 @@
       8.369611681199114,
       1.398371782234227
     ],
-    "score": -0.13932533344896342,
-    "base_score": -0.13933006877463194,
-    "valid": false,
-    "through_gate": false,
     "iteration": 143,
     "whale": 22
   },
   "best_valid": {
+    "score": -0.13932033398904736,
+    "base_score": -0.13932033398904736,
+    "valid": true,
+    "through_gate": false,
     "x": [
       0.0,
       52.16538100286216,
@@ -178,10 +182,6 @@
       8.369035786143938,
       1.398275563266686
     ],
-    "score": -0.13932033398904736,
-    "base_score": -0.13932033398904736,
-    "valid": true,
-    "through_gate": false,
     "iteration": 124,
     "whale": 12
   },
