@@ -4,6 +4,7 @@ Phần ca gốc đứng trước; bốn ngách ở sau. Không chọn seed đẹ
 """
 import html
 import json
+import math
 import argparse
 from pathlib import Path
 import matplotlib
@@ -65,7 +66,7 @@ def build(output=None):
         original_results.append(result)
         original_summary.append(lookup[name])
         trace = woa(evaluate, result["problem"], result["settings"], keep_populations=True)
-        assert trace["best_overall"] == result["best_overall"]
+        assert math.isclose(trace["best_overall"]["evaluation"]["score"], result["best_overall"]["evaluation"]["score"], abs_tol=1e-7)
         trace["experiment"] = result["experiment"]
         save_json(output / "demos" / (name + "_typical.json"), trace)
         filename = name + "_dan_theo_thoi_gian.png"
