@@ -16,10 +16,11 @@ def chosen_report(result):
 def draw_map(ax, problem, report=None, population=None, title="", alpha=0.10):
     for storm in problem["storms"]:
         center = (storm["x"], storm["y"])
-        ax.add_patch(Circle(center, storm["r"], facecolor="#d8b7ab", alpha=0.65, zorder=1))
+        ax.add_patch(Circle(center, storm["r"], facecolor="#f0a6ca", alpha=0.55, zorder=1))
         ax.add_patch(Circle(center, storm["r"] + problem["safety"], fill=False,
-                            edgecolor="#bd652b", linestyle="--", linewidth=1, zorder=2))
-        ax.text(storm["x"], storm["y"], storm["name"], ha="center", fontsize=9, zorder=6)
+                            edgecolor="#d87a99", linestyle="--", linewidth=1.2, zorder=2))
+        ax.text(storm["x"], storm["y"], storm["name"], ha="center", va="center",
+                fontsize=9, weight="bold", color="#8b0000", zorder=6)
     if population is not None:
         for whale in population:
             xs = [problem["start"][0]]
@@ -35,8 +36,11 @@ def draw_map(ax, problem, report=None, population=None, title="", alpha=0.10):
         ax.plot([gate["x"], gate["x"]], [gate["y_min"], gate["y_max"]],
                 color="#7a3eb1", linewidth=4, zorder=7)
     for camp in problem["camps"]:
-        ax.scatter(camp["x"], camp["y"], marker="D", s=24, color="#233848", zorder=8)
-        ax.text(camp["x"] + 1.5, camp["y"] + 1.5, camp["name"], fontsize=8, zorder=8)
+        w = camp.get("weight", camp.get("w", None))
+        label = f"{camp['name']} (w={w})" if w is not None else camp["name"]
+        ax.scatter(camp["x"], camp["y"], marker="D", s=28, color="#233848", zorder=8)
+        ax.text(camp["x"] + 1.5, camp["y"] + 1.5, label, fontsize=7.5,
+                weight="bold", color="#233848", zorder=8)
     if report is not None:
         points = report["points"]
         for i in range(len(points) - 1):
